@@ -1,0 +1,134 @@
+shell 常用命令集合
+
+常用命令
+whoami    										我是谁
+who       										环境上有哪些人
+w         										环境上那些人在干啥
+date      										查看当前系统时间  
+hwclock   										查看当前硬件时间 
+unanme -a										查看系统版本信息
+uname -r										查看内核版本号x86
+uname -m										查看系统硬件环境 如x86，arm等
+cat /etc/*release*								查看系统版本信息
+cat /proc/version  								查看系统版本信息
+lsblk                                          	列出所有磁盘信息
+df -h                                          	查看系统磁盘空间使用情况
+df [file]                                      	查看指定文件所属的磁盘空间占用率
+free -h                                        	查看系统内存使用情况（memory物理内存 swap交换内存）
+cat /proc/meminfo								查看系统内存使用情况，memfree+buffers+cached是当前能用的最大内存
+file [file]										查看文件类型				
+stat file										查看文件相关信息，如大小 权限 修改时间等
+mkdir -p [dir]									创建文件夹，当父目录不存在是创建它，且目标目录存在时不报错
+cp -a [srcdir] [dstdir]							拷贝目录，并保有元目录下所有文件的所有相关信息
+cp -p [scrfile] [dstfile]                      	拷贝文件，并保有源文件的所有相关信息
+cp -s [scrfile] [dstfile]						对源文件建立符号连接（软连接），不可对目录创建。与 ln -s效果完全相同
+cp -r [srcdir] [dstdir]  						递归复制，将指定目录下所有文件及其子目录一起复制
+ln -s [srcfile] [dstfile]                      	设置软链接 可对目录设置
+readlink -f [file]                             	读取文件软链接的位置
+scp -r /XXX/xxx/file user@hostname:/xxx/xxx    	从本地传输文件到服务器
+scp -r user@hostname:/xx/xx/file /xxx/xx/xx    	从服务器上传输文件到本地
+cksum [file] 									检查文件的 CRC,用于检查文件传输是否出错
+sha256sum [file]								检查文件的 SHA256 信息，用于检查文件传输是否出错
+md5sum [file]                                  	检查文件的 md5值，用于检查文件传输是否出错
+cmp [file1] [file2]								按字节对比两个文件
+diff -y [file1] [file2]							按行对比两个文件，且并排输出
+chmod 750 [file]								设置文件权限
+chown [user]:[group] [file]						设置文件的用户，用户组
+chown --reference=[srcfile] [dstfile]          	设置desfile归属与scrfile一致
+chattr +i [file]                               	修改文件属性，使得文件不可修改
+lsattr [file]									列出文件属性
+crontab -l										查看周期任务列表
+crontab -e                                     	编辑修改系统周期任务
+tar -cvzf [123.tar.gz] [path]					打包文件
+tar -xvzf [123.tar.gz] [path]                  	解压文件到path
+7za a -v4g -r [123.7z] [path]					打包文件
+ps aux | grep [program]                        	查询正在运行的program的信息，如piddeng
+shutdown -r now									立即重启
+last reboot										查看系统启动日志，何时启动，何时关闭
+alias              								查看别名列表
+head/tail -n [num] [file]                      	显示file前/后n行
+cat/tac [file]									正序/倒序查看文件内容
+tail -f [file]									实时显示file最后10行数据
+pmap -X [pid]                         			查看进程 pid 的内存占用情况
+find -name [filename]                           找到文件
+wget -c [url]                                   断点续传下载
+wget -b [url]                                   后台下载
+lsof -i
+netstat -tunlp
+ 
+ 
+ 数据操作
+$ grep -i [string]                            # 忽略字符大小写，grep 与 ^$ 合用超好用
+$ grep -w [word]                              # 全匹配，word 由数字、字符、下划线组成
+$ grep -n [pattern]                           # 输出对应项在源文件中的行数
+$ grep -v [pattern]                           # 显示不包含匹配文本的所有行
+$ grep -r [pattern] [dir]                     # 查找整个目录
+$ grep -q [pattern]                           # 不显示任何信息，一般与 $? 在脚本里合用
+$ grep -E [pattern]                           # 使用扩展的正则表达式，会慢一点
+$ grep -e [pattern1] -e [pattern2] ...        # 显示符合 -e 指定的所有样式的行
+$ zgrep -a [pattern] [file]                   # 搜索打包文件，不用解压，方便
+$ sed -i [script] [file]                      # 编辑后直接输出到文件
+$ sed 's/[pattern]/[dststr]/g' [file]         # 将 file 中所有符合 pattern 的字符串替换为 dststr
+$ sed '/[pattern]/d' [file]                   # 将 file 中所有符合 pattern 的字符串删除
+$ cut -d [delimiter] -f [num] [file]          # 以 delimiter 为分隔符，按行分割 file，输出第 num 个字段
+$ awk -F [delimiter] '{print $[num]}' [file]  # 以 delimiter 为分隔符，按行分割 file，输出第 num 个字段
+$ awk -v [val]=[value] '{print val+1}' [file] # -v 指定变量及其值，awk 可用于简单的数学运算、数值比较
+$ echo "scale=2;1/2" | bc                     # 使用 bc 进行数学运算、数值比较，scale 用于指定精度，比较正确时返回 1
+$ find / -type f|xargs -d [delim] grep [str]  # 全局搜索字符串
+$ tr -cd [pattern]                            # 删除不匹配的所有其他字符
+$ tr [set1] [set2]                            # 将 set1 中的字符集转换为 set2 中的字符集,经常用于字符转换,如等号转空格
+$ dd if=[file1] of=[file2] conv=ucase         # 将 file1 中的字符转换为大写并输出到 file2
+$ dd if=/dev/zero of=[file] bs=1M count=1000  # 生成一个 1000M 的文件
+$ sort -b                                     # 忽略每行前面开始出的空格字符，以行为单位进行排序
+$ uniq -c                                     # 删除文本文件中重复出现的行，并显示该行重复出现的次数，常与 sort 合用
+$ wc -l
+
+防火墙
+redhat/centos
+
+systemctl status firewalld  # 查看防火墙状态
+systemctl stop firewalld    # 关闭防火墙
+systemctl disable firewalld # 开机禁止启动防火墙
+systemctl enable firewalld  # 开机启动
+service iptables off        # 7.0前关闭防火墙
+chkconfig iptables off      # 7.0前开机禁止启动防火墙
+
+
+
+vim
+:set nu       # 显示行数
+:set hlsearch # 高亮显示匹配字段
+:set paste    # 设置粘贴模式，每行不会添加一个 tab 
+:wq!          # 强制保存并退出
+:q!           # 不保存退出
+dd            # 删除光标所在行
+x             # 删除光标所在字符
+a             # 在光标后插入
+/word         # 搜索 word
+/\cword       # 忽略大小写
+/\<word\>     # 精确匹配 word 
+
+
+Shell Script
+Shell 脚本可以参照菜鸟教程进行简单的学习，这里介绍一些实用的技巧和注意事项：
+
+shell 变量以数字、字符、下划线组成，且数字不能打头，也不能与其它关键字冲突；
+在函数最开始时使用 local 定义所有变量，对算数变量赋值时使用 let 关键字；
+传递参数的方式要记牢：$#,$*,$@,shift,getopts；
+一些特殊的变量：$$,$!,$?；
+常用的 test 命令要记牢：-z,-n,-e,-f,-d,-eq,-ne,-gt,-ge,-lt,-le;
+字符串比较时，如果含有变量，在字符串前加上 x，如 [ x"oracle" == x"$val" ]；
+单条件语句可以使用 && 或 || 写作一行，如 [ $? -ne 0 ] && return 0 或 [ $? -eq 0 ] || return 0；
+获取命令输出时。尽量不要使用反引号方式，$()会更好；
+当使用 for 循环变量时、使用 cp 拷贝时，不能加引号；
+当编写定时任务脚本时，使用 flock 文件锁防止脚本重复执行；
+使用 date +%s 可以获取从 1970 年 1 月 1 日 00:00:00 到目前经历的秒数，用于计时；
+重定向输入输出：>>/dev/null 2>&1 等；
+从标准输入读取单行数据：read -p [tips] -t [timeout] -n [length] value；
+获取数组长度：${#array[@]}或${#array[*]}；
+获取字符串长度：${#string}；
+字符串替换：${[string]//[substring]/[replacement]}；
+知道 dirname,basename；
+当需要导入其它脚本时，使用 source 而非 .；
+使用 BASH_SOURCE 获取脚本所在路径：basepath=$(dirname $BASH_SOURCE)；      
+ 

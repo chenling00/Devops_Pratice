@@ -1,0 +1,137 @@
+#创建表
+CREATE TABLE weather (
+city varchar(80),
+temp_lo int,  --最低温度
+temp_hi int,  --最高温度
+date date,
+);
+
+#删除表
+DROP TABLE tablename；
+
+#在表中增加行
+INSERT INTO tablename VALUES ( 'A' , 'B' 'C' 'D');
+INSERT INTO weather (city, temp_lo, temp_hi, prcp, date)
+    VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
+#COPY
+COPY tablename FROM '/var/postgres/data/filename' #绝对路径
+
+#查询一个表
+select *  from  tablename;
+SELECT city, temp_lo, temp_hi, prcp, date FROM weather;
+SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;
+SELECT * FROM weather  WHERE city = 'San Francisco' AND prcp > 0.0; (AND ,OR ,NOT)
+
+SELECT * FROM weather
+    ORDER BY city;  (order by 排序)
+	
+
+select distinct city from weather; (distinct 消除重复行)
+
+SELECT DISTINCT city
+    FROM weather
+    ORDER BY city; （结果行的顺序可能变化。你可以组合使用DISTINCT和ORDER BY来保证获取一致的结果）
+	
+#连接查询
+
+SELECT *
+    FROM weather, cities
+    WHERE city = name;
+
+SELECT weather.city, weather.temp_lo, weather.temp_hi,
+       weather.prcp, weather.date, cities.location
+    FROM weather, cities
+    WHERE cities.name = weather.city;
+	
+#左外连接 显示左表全部行，如果输出左表中的行没有对应匹配的右表的行，将填充空值 null。
+
+SELECT *
+    FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);
+
+     city      | temp_lo | temp_hi | prcp |    date    |     name      | location
+---------------+---------+---------+------+------------+---------------+-----------
+ Hayward       |      37 |      54 |      | 1994-11-29 |               |
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
+ San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
+(3 rows)
+
+#自连接（把一个表和自己连接起来）
+ 比如，假设我们想找出温度范围在其他天气记录范围之内的天气记录。这样我们就需要拿 weather表里每行的temp_lo和temp_hi列与weather表里其它行的temp_lo和temp_hi列进行比较。我们可以用下面的查询实现这个目标：
+
+SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,
+    W2.city, W2.temp_lo AS low, W2.temp_hi AS high
+    FROM weather W1, weather W2
+    WHERE W1.temp_lo < W2.temp_lo
+    AND W1.temp_hi > W2.temp_hi;
+
+     city      | low | high |     city      | low | high
+---------------+-----+------+---------------+-----+------
+ San Francisco |  43 |   57 | San Francisco |  46 |   50
+ Hayward       |  37 |   54 | San Francisco |  46 |   50
+(2 rows)
+在这里我们把weather表重新标记为W1和W2以区分连接的左部和右部。
+
+#聚集函数 count（计数）、sum（和）、max（最大值）、min(最小值)、avg（均值）；
+select max（temp_lo）from weather;
+
+SELECT city FROM weather WHERE temp_lo = max(temp_lo);     错误 因为where 子句决定哪些行可以被聚集函数计算，所以聚集函数必须在where子句之前被计算；
+
+SELECT city FROM weather WHERE temp_lo = （select max (temp_lo) from weather）; 可以用子查询代替实现相同目的；
+
+# GROUP BY
+聚集同样也常用于和GROUP BY子句组合。比如，我们可以获取每个城市观测到的最低温度的最高值：
+SELECT city, max(temp_lo)
+    FROM weather
+    GROUP BY city;
+#GROUP BY   HAVING (HAVING 子句是查询聚集函数计算之后选取，where子句中不能包含聚集函数，相反having 子句中总是包含聚集函数)
+这样就只给出那些所有temp_lo值曾都低于 40的城市
+SELECT city, max(temp_lo)
+    FROM weather
+    GROUP BY city
+    HAVING max(temp_lo) < 40;
+	
+#UPDATE 更新现有的行 update tablena set 
+假设你发现所有 11 月 28 日以后的温度读数都低了两度，那么你就可以用下面的方式改正数据：
+UPDATE weather
+    SET temp_hi = temp_hi - 2,  temp_lo = temp_lo - 2
+    WHERE date > '1994-11-28'; 
+#DELETE 删除
+
+delete from weather where city = 'hayward';
+
+#创建视图
+CREATE VIEW myview AS
+	SELECT * FROM weather，cities WHERE city = name;
+
+#外键
+CREATE TABLE cities （
+	city	varchar(80) primary key,
+	location	point
+）;
+
+CREATE TABLE weather (
+	city	varchar(80) references cities(city),
+	temp_lo int,
+	temp_hi int,
+	prcp 	real,
+	date	date,
+);
+
+现在尝试插入一个非法的记录：
+INSERT INTO weather VALUES ('berkeley', 45, 35, 0.0, '1994-11-28');
+
+ERROR:  insert or update on table "weather" violates foreign key constraint "weather_city_fkey"
+DETAIL:  Key (city)=(Berkeley) is not present in table "cities".
+
+#事务 事务最重要的一点是它将多个步骤捆绑成了一个单一的、要么全完成要么全不完成的操
+在PostgreSQL中，开启一个事务需要将SQL命令用BEGIN和COMMIT命令包围起来。因此我们的银行事务看起来会是这样：
+
+BEGIN;
+UPDATE accounts SET balance = balance - 100.00
+    WHERE name = 'Alice';
+-- etc etc
+COMMIT;
+如果，在事务执行中我们并不想提交（或许是我们注意到Alice的余额不足），我们可以发出ROLLBACK命令而不是COMMIT命令，这样所有目前的更新将会被取消。
+
+PostgreSQL实际上将每一个SQL语句都作为一个事务来执行。如果我们没有发出BEGIN命令，则每个独立的语句都会被加上一个隐式的BEGIN以及（如果成功）COMMIT来包围它。一组被BEGIN和COMMIT包围的语句也被称为一个事务块。
+
