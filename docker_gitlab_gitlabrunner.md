@@ -43,6 +43,7 @@ docker run --detach \
   --publish 443:443 --publish 80:80 --publish 222:22 \
   --name gitlab \
   --restart always \
+  --privileged=true \
   --volume /home/gitlab/config:/etc/gitlab \
   --volume /home/gitlab/logs:/var/log/gitlab \
   --volume /home/gitlab/data:/var/opt/gitlab \
@@ -57,6 +58,7 @@ docker run --detach \
 `restart`: 重启方式
 
 `volume`: 目录挂载，把容器内目录挂载到服务器本地(服务器本地目录：容器内目录)
+privileged=true:让容器获取宿主机root权限
 
 `gitlab/gitlab-ce:latest` 镜像名称
 
