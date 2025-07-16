@@ -58,7 +58,8 @@ docker run --detach \
 `restart`: 重启方式
 
 `volume`: 目录挂载，把容器内目录挂载到服务器本地(服务器本地目录：容器内目录)
-privileged=true:让容器获取宿主机root权限
+
+`privileged=true`:让容器获取宿主机root权限
 
 `gitlab/gitlab-ce:latest` 镜像名称
 
